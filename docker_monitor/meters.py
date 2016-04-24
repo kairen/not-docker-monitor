@@ -63,10 +63,10 @@ class Meters(Thread):
                     if key == Meters.CPU:
                         usages[container_id].update({
                             'sys_cpu': sys_cpu_usage,
-                            'cgroup_cpu': int(f),
+                            'cgroup_cpu': int(f.read()),
                         })
                     else:
-                        usages[container_id].update({'cgroup_memory': int(f)})
+                        usages[container_id].update({'cgroup_memory': int(f.read())})
 
         return usages
 
@@ -94,7 +94,7 @@ class Meters(Thread):
             cpu_rate = self.calc_cpu_usage(first, last)
             if cpu_rate:
                 self.f_usage[container_id] = self.l_usage[container_id]
-            rates[container_id].update({'cpu': cpu_rate, 'memory': mem_rate})
+                rates[container_id] = {'cpu': cpu_rate, 'memory': mem_rate}
 
         return rates
 
