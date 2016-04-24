@@ -4,7 +4,6 @@
 
 import logging
 import commands
-import sys
 from docker_monitor.common import logs
 from docker_monitor.common.decorator import align_terminal_top
 from docker_monitor.meters import Meters
@@ -30,9 +29,10 @@ def display_status(meters):
     """
 
     for key, value in meters.iteritems():
-        print("{container_id} > {rate:.2f}".format(
+        print("{container_id} CPU => {cpu:.2f} % Memory => {mem:0.2f} MB".format(
             container_id=key[1:12],
-            rate=value
+            cpu=value['cpu'],
+            mem=value['memory']
         ))
 
 
@@ -52,7 +52,6 @@ def main():
 
     Meters(
         func=display_status,
-        meter_type=Meters.CPU,
         container_ids=ids
     ).run()
 

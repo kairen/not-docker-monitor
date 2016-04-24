@@ -21,10 +21,11 @@ class Meters(Thread):
 
     CPU = 0x01
     MEMORY = 0x02
+    ALL = 0x03
 
     _CGROUP_PATHS = {
         CPU: "/sys/fs/cgroup/cpuacct/docker",
-        MEMORY: "/sys/fs/cgroup/memory/docker"
+        MEMORY: "/sys/fs/cgroup/memory/docker",
     }
 
     _CGROUP_FILE = {
@@ -32,14 +33,11 @@ class Meters(Thread):
         MEMORY: "memory.usage_in_bytes"
     }
 
-    def __init__(self, func, meter_type, **kwargs):
+    def __init__(self, func, **kwargs):
         super(Meters, self).__init__()
 
         self.kwargs = kwargs
         self.container_ids = self.kwargs['container_ids']
-        self.meter_type = meter_type
-        self.path = Meters._CGROUP_PATHS[meter_type]
-        self.file = Meters._CGROUP_FILE[meter_type]
 
         self.callback = func
 
@@ -48,67 +46,71 @@ class Meters(Thread):
 
     def _get_usages(self):
         usages = dict()
+        sys_cpu_usage = int(commands.getoutput(SYS_CPU_CMD))
+
         for container_id in self.container_ids:
-            path = "{path}/{id}/{file_name}".format(
-                path=self.path,
-                id=container_id,
-                file_name=self.file
-            )
-            with open(path, 'r') as f:
-                usages[container_id] = int(f.read())
+            usages[container_id] = {}
+            for (key, path_v), (_, file_v) in zip(
+                    Meters._CGROUP_PATHS.items(),
+                    Meters._CGROUP_FILE.items()
+            ):
+                path = "{path}/{id}/{file_name}".format(
+                    path=path_v,
+                    id=container_id,
+                    file_name=file_v,
+                )
+                with open(path, 'r') as f:
+                    if key == Meters.CPU:
+                        usages[container_id].update({
+                            'sys_cpu': sys_cpu_usage,
+                            'cgroup_cpu': int(f),
+                        })
+                    else:
+                        usages[container_id].update({'cgroup_memory': int(f)})
 
         return usages
 
-    def _get_cpu_usage(self):
-        sys_cpu_usage = int(commands.getoutput(SYS_CPU_CMD))
-        status = dict()
+    def calc_cpu_usage(self, first, last):
+        sys_diff = (last['sys_cpu'] != first['sys_cpu'])
+        cgroup_diff = (last['cgroup_cpu'] != first['cgroup_cpu'])
 
-        for identity, usage in self._get_usages().iteritems():
-            status[identity] = {
-                'sys_usage': sys_cpu_usage,
-                'cgroup_usage': usage,
-            }
+        if sys_diff and cgroup_diff:
+            cpu_total = last['sys_cpu'] - first['sys_cpu']
+            cgroup_total = last['cgroup_cpu'] - first['cgroup_cpu']
+            return cgroup_total * SYS_CORE / cpu_total * 100 / float(10000000)
+        else:
+            return None
 
-        return status
+    def calc_mem_usage(self, last):
+        return last['cgroup_memory'] / float(1000000)
 
-    def _get_mem_usage(self):
-        status = dict()
-        for identity, usage in self._get_usages().iteritems():
-            status[identity] = {'cgroup_usage': usage}
+    def get_usage_rate(self):
+        rates = dict()
+        for container_id in self.container_ids:
+            first = self.f_usage[container_id]
+            last = self.l_usage[container_id]
 
-        return status
+            mem_rate = self.calc_mem_usage(last)
+            cpu_rate = self.calc_cpu_usage(first, last)
+            if cpu_rate:
+                self.f_usage[container_id] = self.l_usage[container_id]
+            rates[container_id].update({'cpu': cpu_rate, 'memory': mem_rate})
 
-    def calc_cpu_usage(self):
-        cpu_rates = dict()
-        for identity in self.container_ids:
-            f_usage = self.f_usage[identity]
-            l_usage = self.l_usage[identity]
-
-            sys_diff = (l_usage['sys_usage'] != f_usage['sys_usage'])
-            cgroup_diff = (l_usage['cgroup_usage'] != f_usage['cgroup_usage'])
-
-            if sys_diff and cgroup_diff:
-                cpu_total = l_usage['sys_usage'] - f_usage['sys_usage']
-                cgroup_total = l_usage['cgroup_usage'] - f_usage['cgroup_usage']
-                rate = cgroup_total * SYS_CORE / cpu_total * 100
-                cpu_rates[identity] = rate / float(10000000)
-                self.f_usage[identity] = self.l_usage[identity]
-
-        return cpu_rates
+        return rates
 
     def run(self):
         while True:
             try:
-                usages = self._get_cpu_usage()
+                usages = self._get_usages()
                 if len(self.f_usage) == 0 and len(usages) != len(self.f_usage):
                     self.f_usage = usages
                 else:
                     self.l_usage = usages
-                    cpu_rates = self.calc_cpu_usage()
-                    if cpu_rates:
-                        self.callback(cpu_rates)
+                    rates = self.get_usage_rate()
+                    if rates:
+                        self.callback(rates)
 
             except Exception as e:
                 LOG.error("%s" % (e.__str__()))
 
-            time.sleep(0.1)
+            time.sleep(0.5)
