@@ -37,15 +37,17 @@ class Meters(Thread):
         super(Meters, self).__init__()
 
         self.kwargs = kwargs
-        self.container_ids = self.kwargs['container_ids']
 
         window_time = self.kwargs['window_time']
         self.window_time = window_time if window_time else 0.5
-
+        self.container_ids = None
         self.callback = func
 
         self.f_usage = dict()
         self.l_usage = dict()
+
+    def get_container_ids(self):
+        return commands.getoutput("docker ps -q --no-trunc").split("\n")
 
     def _get_usages(self):
         usages = dict()
@@ -105,6 +107,7 @@ class Meters(Thread):
         callback_rates = dict()
         while True:
             try:
+                self.container_ids = self.get_container_ids()
                 usages = self._get_usages()
                 if len(self.f_usage) == 0 and len(usages) != len(self.f_usage):
                     self.f_usage = usages

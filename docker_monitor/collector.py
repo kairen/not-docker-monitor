@@ -3,7 +3,6 @@
 # All Rights Reserved
 
 import logging
-import commands
 import argparse
 import sys
 
@@ -13,14 +12,6 @@ from docker_monitor.common import config
 from docker_monitor.common.decorator import align_terminal_top
 
 LOG = logging.getLogger("docker-monitor")
-
-
-def container_ids():
-    """
-    Get docker all container long id
-    :return: container id list
-    """
-    return commands.getoutput("docker ps -q --no-trunc").split("\n")
 
 
 @align_terminal_top(description="Docker meter status")
@@ -80,10 +71,8 @@ def main():
 
         # Signal node monitor
         if conf.rabbit_role() == 'None':
-            ids = container_ids()
             Meters(
                 func=display_status,
-                container_ids=ids,
                 window_time=conf.window_time()
             ).run()
 
