@@ -21,7 +21,6 @@ class Meters(Thread):
 
     CPU = 0x01
     MEMORY = 0x02
-    ALL = 0x03
 
     _CGROUP_PATHS = {
         CPU: "/sys/fs/cgroup/cpuacct/docker",
@@ -103,19 +102,28 @@ class Meters(Thread):
 
         return rates
 
+    def live_container(self, rates):
+        unlive_ids = list(set(rates.keys()) - set(self.container_ids))
+        for container_id in unlive_ids:
+            try:
+                del rates[container_id]
+            except KeyError:
+                pass
+
     def run(self):
         callback_rates = dict()
         while True:
             try:
                 self.container_ids = self.get_container_ids()
                 usages = self._get_usages()
-                if len(self.f_usage) == 0 and len(usages) != len(self.f_usage):
+                if len(set(self.f_usage.keys()) ^ set(usages.keys())) != 0:
                     self.f_usage = usages
                 else:
                     self.l_usage = usages
                     rates = self.get_usage_rate()
                     if rates:
                         callback_rates.update(rates)
+                        self.live_container(callback_rates)
                         self.callback(callback_rates)
 
             except Exception as e:
