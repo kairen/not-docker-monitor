@@ -39,6 +39,9 @@ class Meters(Thread):
         self.kwargs = kwargs
         self.container_ids = self.kwargs['container_ids']
 
+        window_time = self.kwargs['window_time']
+        self.window_time = window_time if window_time else 0.5
+
         self.callback = func
 
         self.f_usage = dict()
@@ -99,6 +102,7 @@ class Meters(Thread):
         return rates
 
     def run(self):
+        callback_rates = dict()
         while True:
             try:
                 usages = self._get_usages()
@@ -108,9 +112,10 @@ class Meters(Thread):
                     self.l_usage = usages
                     rates = self.get_usage_rate()
                     if rates:
-                        self.callback(rates)
+                        callback_rates.update(rates)
+                        self.callback(callback_rates)
 
             except Exception as e:
                 LOG.error("%s" % (e.__str__()))
 
-            time.sleep(0.5)
+            time.sleep(self.window_time)
