@@ -115,7 +115,7 @@ class Meters(Thread):
         while True:
             try:
                 self.container_ids = self.get_container_ids()
-                if len(self.container_ids) == 0:
+                if len(self.container_ids) > 0:
                     usages = self._get_usages()
 
                     if len(set(self.f_usage.keys()) ^ set(usages.keys())) != 0:

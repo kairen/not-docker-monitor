@@ -19,19 +19,6 @@ LOG = logging.getLogger("docker-monitor")
 CONF = None
 
 
-def publish_status(meters):
-    """
-    Publish docker meters status callback
-    """
-    status = {socket.gethostname(): meters}
-    publish.RabbitPublish(
-        host=CONF.rabbit_host(),
-        port=CONF.rabbit_port(),
-        queue=CONF.rabbit_queue(),
-        body=json.dumps(status)
-    ).run()
-
-
 @align_terminal_top(description="Docker meter status")
 def display_status(meters):
     """
@@ -48,8 +35,23 @@ def display_status(meters):
         ))
 
 
-@align_terminal_top(description="Docker meter status")
+def publish_status(meters):
+    """
+    Publish docker meters status callback
+    """
+    status = {socket.gethostname(): meters}
+    publish.RabbitPublish(
+        host=CONF.rabbit_host(),
+        port=CONF.rabbit_port(),
+        queue=CONF.rabbit_queue(),
+        body=json.dumps(status)
+    ).run()
+
+
 def receive_callback(ch, method, properties, body):
+    """
+    RabbitMQ receive callback func
+    """
     print("[ {} ] Received : {} ".format(
         ch.channel_number, body
     ))
@@ -97,7 +99,6 @@ def main():
         role = CONF.rabbit_role()
 
         if role == 'consumer':
-            print('test')
             consumer.RabbitConsumer(
                 func=receive_callback,
                 host=CONF.rabbit_host(),
