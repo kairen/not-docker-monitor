@@ -16,3 +16,4 @@ dev/var/
 var/
 dist/
 docker_monitor.egg-info/
+test.py

@@ -25,10 +25,7 @@ def align_terminal_top(func=None, description=None):
     @functools.wraps(func)
     def inner_func(*args, **kwargs):
         sys.stderr.write("\x1b[2J\x1b[H")
-        print("[*] {}. To exit press CTRL+C\n{}".format(
-            description,
-            "-" * 50
-        ))
+        print("[*] {}. To exit press CTRL+C\n{}".format(description, "-" * 50))
         return func(*args, **kwargs)
 
     return inner_func

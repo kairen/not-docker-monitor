@@ -21,7 +21,6 @@ class Meters(Thread):
 
     CPU = 0x01
     MEMORY = 0x02
-    ALL = 0x03
 
     _CGROUP_PATHS = {
         CPU: "/sys/fs/cgroup/cpuacct/docker",
@@ -37,12 +36,17 @@ class Meters(Thread):
         super(Meters, self).__init__()
 
         self.kwargs = kwargs
-        self.container_ids = self.kwargs['container_ids']
 
+        window_time = self.kwargs['window_time']
+        self.window_time = window_time if window_time else 0.5
+        self.container_ids = None
         self.callback = func
 
         self.f_usage = dict()
         self.l_usage = dict()
+
+    def get_container_ids(self):
+        return commands.getoutput("docker ps -q --no-trunc").split("\n")
 
     def _get_usages(self):
         usages = dict()
@@ -98,19 +102,33 @@ class Meters(Thread):
 
         return rates
 
+    def live_container(self, rates):
+        unlive_ids = list(set(rates.keys()) - set(self.container_ids))
+        for container_id in unlive_ids:
+            try:
+                del rates[container_id]
+            except KeyError:
+                pass
+
     def run(self):
+        callback_rates = dict()
         while True:
             try:
-                usages = self._get_usages()
-                if len(self.f_usage) == 0 and len(usages) != len(self.f_usage):
-                    self.f_usage = usages
-                else:
-                    self.l_usage = usages
-                    rates = self.get_usage_rate()
-                    if rates:
-                        self.callback(rates)
+                self.container_ids = self.get_container_ids()
+                if len(self.container_ids) > 0:
+                    usages = self._get_usages()
+
+                    if len(set(self.f_usage.keys()) ^ set(usages.keys())) != 0:
+                        self.f_usage = usages
+                    else:
+                        self.l_usage = usages
+                        rates = self.get_usage_rate()
+                        if rates:
+                            callback_rates.update(rates)
+                            self.live_container(callback_rates)
+                            self.callback(callback_rates)
 
             except Exception as e:
                 LOG.error("%s" % (e.__str__()))
 
-            time.sleep(0.5)
+            time.sleep(self.window_time)

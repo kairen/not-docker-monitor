@@ -17,3 +17,30 @@ class Configuration:
 
     def debug(self):
         return self.parser.getboolean("default", "debug")
+
+    def window_time(self):
+        return self.parser.getfloat("default", "window_time")
+
+    def rabbit_role(self):
+        return self.parser.get(
+            "rabbit_messaging",
+            "role"
+        )
+
+    def rabbit_host(self):
+        return self.parser.get(
+            "rabbit_messaging",
+            "host"
+        )
+
+    def rabbit_port(self):
+        return self.parser.getint(
+            "rabbit_messaging",
+            "port"
+        )
+
+    def rabbit_queue(self):
+        return self.parser.get(
+            "rabbit_messaging",
+            "queue"
+        )
