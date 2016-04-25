@@ -4,20 +4,38 @@
 
 import logging
 import argparse
+import socket
+import json
 import sys
 
 from docker_monitor.common import logs
-from docker_monitor.meters import Meters
 from docker_monitor.common import config
 from docker_monitor.common.decorator import align_terminal_top
 
+from docker_monitor.meters import Meters
+from docker_monitor.rabbitmq import publish, consumer
+
 LOG = logging.getLogger("docker-monitor")
+CONF = None
+
+
+def publish_status(meters):
+    """
+    Publish docker meters status callback
+    """
+    status = {socket.gethostname(): meters}
+    publish.RabbitPublish(
+        host=CONF.rabbit_host(),
+        port=CONF.rabbit_port(),
+        queue=CONF.rabbit_queue(),
+        body=json.dumps(status)
+    ).run()
 
 
 @align_terminal_top(description="Docker meter status")
 def display_status(meters):
     """
-    Display docker meters status
+    Display docker meters status callback
     :param meters: this is docker meter objects
     :return: if meter not None return status,
              else return some message
@@ -28,6 +46,13 @@ def display_status(meters):
             cpu=value['cpu'],
             mem=value['memory']
         ))
+
+
+@align_terminal_top(description="Docker meter status")
+def receive_callback(ch, method, properties, body):
+    print("[ {} ] Received : {} ".format(
+        ch.channel_number, body
+    ))
 
 
 def get_parser():
@@ -67,18 +92,23 @@ def main():
 
     args = parser.parse_args()
     try:
-        conf = config.Configuration(args.config_file)
+        global CONF
+        CONF = config.Configuration(args.config_file)
+        role = CONF.rabbit_role()
 
-        # Signal node monitor
-        if conf.rabbit_role() == 'None':
+        if role == 'consumer':
+            print('test')
+            consumer.RabbitConsumer(
+                func=receive_callback,
+                host=CONF.rabbit_host(),
+                port=CONF.rabbit_port(),
+                queue=CONF.rabbit_queue(),
+            ).start()
+        else:
             Meters(
-                func=display_status,
-                window_time=conf.window_time()
+                func=display_status if role == 'None' else publish_status,
+                window_time=CONF.window_time()
             ).run()
 
     except Exception as e:
         LOG.error("%s" % (e.__str__()))
-
-
-if __name__ == '__main__':
-    main()

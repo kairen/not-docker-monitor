@@ -115,16 +115,18 @@ class Meters(Thread):
         while True:
             try:
                 self.container_ids = self.get_container_ids()
-                usages = self._get_usages()
-                if len(set(self.f_usage.keys()) ^ set(usages.keys())) != 0:
-                    self.f_usage = usages
-                else:
-                    self.l_usage = usages
-                    rates = self.get_usage_rate()
-                    if rates:
-                        callback_rates.update(rates)
-                        self.live_container(callback_rates)
-                        self.callback(callback_rates)
+                if len(self.container_ids) == 0:
+                    usages = self._get_usages()
+
+                    if len(set(self.f_usage.keys()) ^ set(usages.keys())) != 0:
+                        self.f_usage = usages
+                    else:
+                        self.l_usage = usages
+                        rates = self.get_usage_rate()
+                        if rates:
+                            callback_rates.update(rates)
+                            self.live_container(callback_rates)
+                            self.callback(callback_rates)
 
             except Exception as e:
                 LOG.error("%s" % (e.__str__()))

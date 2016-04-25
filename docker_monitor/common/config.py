@@ -26,3 +26,21 @@ class Configuration:
             "rabbit_messaging",
             "role"
         )
+
+    def rabbit_host(self):
+        return self.parser.get(
+            "rabbit_messaging",
+            "host"
+        )
+
+    def rabbit_port(self):
+        return self.parser.getint(
+            "rabbit_messaging",
+            "port"
+        )
+
+    def rabbit_queue(self):
+        return self.parser.get(
+            "rabbit_messaging",
+            "queue"
+        )
