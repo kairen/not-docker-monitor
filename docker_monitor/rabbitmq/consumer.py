@@ -24,8 +24,14 @@ class RabbitConsumer:
         self.queue = kwargs['queue']
         self.callback = func
 
+        credentials = pika.PlainCredentials(kwargs['user'], kwargs['passwd'])
         self.connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host=host, port=port)
+            pika.ConnectionParameters(
+                host=host,
+                port=port,
+                credentials=credentials,
+                socket_timeout=kwargs['timeout']
+            )
         )
 
     def start(self):
@@ -41,7 +47,10 @@ class RabbitConsumer:
 if __name__ == '__main__':
     RabbitConsumer(
         func=callback,
-        host='192.168.99.100',
+        host='10.26.1.113',
         port=5672,
         queue='stat',
+        user='docker',
+        passwd='docker',
+        timeout=30,
     ).start()

@@ -44,7 +44,10 @@ def publish_status(meters):
         host=CONF.rabbit_host(),
         port=CONF.rabbit_port(),
         queue=CONF.rabbit_queue(),
-        body=json.dumps(status)
+        body=json.dumps(status),
+        user=CONF.rabbit_user(),
+        passwd=CONF.rabbit_passwd(),
+        timeout=CONF.rabbit_timeout(),
     ).run()
 
 
@@ -104,6 +107,9 @@ def main():
                 host=CONF.rabbit_host(),
                 port=CONF.rabbit_port(),
                 queue=CONF.rabbit_queue(),
+                user=CONF.rabbit_user(),
+                passwd=CONF.rabbit_passwd(),
+                timeout=CONF.rabbit_timeout(),
             ).start()
         else:
             Meters(

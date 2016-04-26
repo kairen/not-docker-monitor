@@ -44,3 +44,21 @@ class Configuration:
             "rabbit_messaging",
             "queue"
         )
+
+    def rabbit_user(self):
+        return self.parser.get(
+            "rabbit_messaging",
+            "username"
+        )
+
+    def rabbit_passwd(self):
+        return self.parser.get(
+            "rabbit_messaging",
+            "password"
+        )
+
+    def rabbit_timeout(self):
+        return self.parser.getint(
+            "rabbit_messaging",
+            "connect_timeout"
+        )
