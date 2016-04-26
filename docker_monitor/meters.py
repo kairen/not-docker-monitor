@@ -46,7 +46,11 @@ class Meters(Thread):
         self.l_usage = dict()
 
     def get_container_ids(self):
-        return commands.getoutput("docker ps -q --no-trunc").split("\n")
+        ids = commands.getoutput("docker ps -q --no-trunc")
+        if ids != '':
+            return ids.split("\n")
+        else:
+            return []
 
     def _get_usages(self):
         usages = dict()
@@ -98,12 +102,13 @@ class Meters(Thread):
             cpu_rate = self.calc_cpu_usage(first, last)
             if cpu_rate:
                 self.f_usage[container_id] = self.l_usage[container_id]
-                rates[container_id] = {'cpu': cpu_rate, 'memory': mem_rate}
+                rates[container_id[0:12]] = {'cpu': cpu_rate, 'memory': mem_rate}
 
         return rates
 
     def live_container(self, rates):
-        unlive_ids = list(set(rates.keys()) - set(self.container_ids))
+        short_ids = [long_id[0:12] for long_id in self.container_ids]
+        unlive_ids = list(set(rates.keys()) - set(short_ids))
         for container_id in unlive_ids:
             try:
                 del rates[container_id]
