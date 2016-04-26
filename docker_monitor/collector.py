@@ -29,10 +29,12 @@ def display_status(meters):
              else return some message
     """
     for key, value in meters.iteritems():
-        print("{container_id} CPU => {cpu:.2f}% Memory => {mem:0.2f} MB".format(
-            container_id=key,
+        print("{id} CPU => {cpu:.2f}% Memory => {mem:0.2f} MB / {mem_total} MB = {mem_free:0.2f} MB".format(
+            id=key,
             cpu=value['cpu'],
-            mem=value['memory']
+            mem=value['memory'],
+            mem_total=value['mem_total'],
+            mem_free=value['mem_free']
         ))
 
 
