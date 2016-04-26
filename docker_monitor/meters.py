@@ -102,7 +102,7 @@ class Meters(Thread):
             cpu_rate = self.calc_cpu_usage(first, last)
             if cpu_rate:
                 self.f_usage[container_id] = self.l_usage[container_id]
-                rates[container_id] = {'cpu': cpu_rate, 'memory': mem_rate}
+                rates[container_id[0:12]] = {'cpu': cpu_rate, 'memory': mem_rate}
 
         return rates
 
