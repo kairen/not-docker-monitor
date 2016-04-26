@@ -46,7 +46,11 @@ class Meters(Thread):
         self.l_usage = dict()
 
     def get_container_ids(self):
-        return commands.getoutput("docker ps -q --no-trunc").split("\n")
+        ids = commands.getoutput("docker ps -q --no-trunc")
+        if ids != '':
+            return ids.split("\n")
+        else:
+            return []
 
     def _get_usages(self):
         usages = dict()
