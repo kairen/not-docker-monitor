@@ -107,7 +107,8 @@ class Meters(Thread):
         return rates
 
     def live_container(self, rates):
-        unlive_ids = list(set(rates.keys()) - set(self.container_ids))
+        short_ids = [long_id[0:12] for long_id in self.container_ids]
+        unlive_ids = list(set(rates.keys()) - set(short_ids))
         for container_id in unlive_ids:
             try:
                 del rates[container_id]

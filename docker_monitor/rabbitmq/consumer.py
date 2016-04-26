@@ -9,8 +9,8 @@ LOG = logging.getLogger("consumer.meters")
 
 
 def callback(ch, method, properties, body):
-    print("[ {} ] Received {} {}".format(
-        ch.channel_number, body, method.delivery_tag
+    print("[ {} ] {} Received {} ".format(
+        method.delivery_tag, ch.channel_number, body
     ))
 
 

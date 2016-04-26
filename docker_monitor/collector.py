@@ -16,6 +16,7 @@ from docker_monitor.meters import Meters
 from docker_monitor.rabbitmq import publish, consumer
 
 LOG = logging.getLogger("docker-monitor")
+STATUS = dict()
 CONF = None
 
 
@@ -29,7 +30,7 @@ def display_status(meters):
     """
     for key, value in meters.iteritems():
         print("{container_id} CPU => {cpu:.2f}% Memory => {mem:0.2f} MB".format(
-            container_id=key[0:12],
+            container_id=key,
             cpu=value['cpu'],
             mem=value['memory']
         ))
@@ -51,13 +52,13 @@ def publish_status(meters):
     ).run()
 
 
+@align_terminal_top(description="Docker meter status")
 def receive_callback(ch, method, properties, body):
     """
     RabbitMQ receive callback func
     """
-    print("[ {} ] Received : {} ".format(
-        ch.channel_number, body
-    ))
+    STATUS.update(json.loads(body))
+    print(json.dumps(STATUS, indent=4, sort_keys=True))
 
 
 def get_parser():
@@ -80,14 +81,7 @@ def main():
     """
     Docker monitor entry point ...
     """
-    sh = logging.StreamHandler()
-    sh.setFormatter(logs.color_format())
-    sh.setLevel(logging.WARNING)
-
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
-    root_logger.addHandler(sh)
-    sh.setLevel(logging.DEBUG)
+    global CONF
 
     parser = get_parser()
 
@@ -96,11 +90,19 @@ def main():
         sys.exit()
 
     args = parser.parse_args()
-    try:
-        global CONF
-        CONF = config.Configuration(args.config_file)
-        role = CONF.rabbit_role()
+    CONF = config.Configuration(args.config_file)
+    if CONF.debug():
+        sh = logging.StreamHandler()
+        sh.setFormatter(logs.color_format())
+        sh.setLevel(logging.WARNING)
 
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.DEBUG)
+        root_logger.addHandler(sh)
+        sh.setLevel(logging.DEBUG)
+
+    try:
+        role = CONF.rabbit_role()
         if role == 'consumer':
             consumer.RabbitConsumer(
                 func=receive_callback,
