@@ -79,7 +79,6 @@ class Meters(Thread):
                         usages[container_id].update({
                             'cgroup_memory': int(f.read()),
                             'total_memory': sys_mem_total,
-                            'free_memory': sys_mem_total - int(f.read()),
                         })
 
         return usages
@@ -101,18 +100,15 @@ class Meters(Thread):
     def calc_mem_usage(self, last):
         return last['cgroup_memory'] / float(1000000)
 
-    def calc_mem_free(self, last):
-        return last['free_memory']
-
     def get_usage_rate(self):
         rates = dict()
         for container_id in self.container_ids:
             first = self.f_usage[container_id]
             last = self.l_usage[container_id]
 
-            mem_usage = self.calc_mem_usage(last)
             mem_total = self.calc_mem_total(last)
-            mem_free = self.calc_mem_free(last)
+            mem_usage = self.calc_mem_usage(last)
+            mem_free = self.calc_mem_total(last) - self.calc_mem_usage(last)
             cpu_rate = self.calc_cpu_usage(first, last)
             if cpu_rate:
                 self.f_usage[container_id] = self.l_usage[container_id]
