@@ -12,6 +12,7 @@ LOG = logging.getLogger("collect.meters")
 
 SYS_CORE = multiprocessing.cpu_count()
 SYS_CPU_CMD = "awk '/cpu / {for(i=2;i<=NF;i++) t+=$i; print t; t=0}' /proc/stat"
+SYS_MEM_CMD = "free -m | awk '{print $2}' | sed -n '2p'"
 
 
 class Meters(Thread):
@@ -55,6 +56,7 @@ class Meters(Thread):
     def _get_usages(self):
         usages = dict()
         sys_cpu_usage = int(commands.getoutput(SYS_CPU_CMD))
+        sys_mem_total = int(commands.getoutput(SYS_MEM_CMD))
 
         for container_id in self.container_ids:
             usages[container_id] = {}
@@ -74,7 +76,11 @@ class Meters(Thread):
                             'cgroup_cpu': int(f.read()),
                         })
                     else:
-                        usages[container_id].update({'cgroup_memory': int(f.read())})
+                        usages[container_id].update({
+                            'cgroup_memory': int(f.read()),
+                            'total_memory': sys_mem_total,
+                            'free_memory': sys_mem_total - int(f.read()),
+                        })
 
         return usages
 
@@ -89,8 +95,14 @@ class Meters(Thread):
         else:
             return None
 
+    def calc_mem_total(self, last):
+        return last['total_memory']
+
     def calc_mem_usage(self, last):
         return last['cgroup_memory'] / float(1000000)
+
+    def calc_mem_free(self, last):
+        return last['free_memory']
 
     def get_usage_rate(self):
         rates = dict()
@@ -98,11 +110,13 @@ class Meters(Thread):
             first = self.f_usage[container_id]
             last = self.l_usage[container_id]
 
-            mem_rate = self.calc_mem_usage(last)
+            mem_usage = self.calc_mem_usage(last)
+            mem_total = self.calc_mem_total(last)
+            mem_free = self.calc_mem_free(last)
             cpu_rate = self.calc_cpu_usage(first, last)
             if cpu_rate:
                 self.f_usage[container_id] = self.l_usage[container_id]
-                rates[container_id[0:12]] = {'cpu': cpu_rate, 'memory': mem_rate}
+                rates[container_id[0:12]] = {'cpu': cpu_rate, 'memory': mem_usage, 'mem_total': mem_total, 'mem_free': mem_free}
 
         return rates
 
