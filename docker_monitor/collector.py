@@ -7,7 +7,8 @@ import argparse
 import socket
 import json
 import sys
-o
+import datetime
+import commands
 
 from docker_monitor.common import logs
 from docker_monitor.common import config
