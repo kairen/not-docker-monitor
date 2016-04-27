@@ -100,19 +100,23 @@ class Meters(Thread):
     def calc_mem_usage(self, last):
         return last['cgroup_memory'] / float(1000000)
 
+    def get_container_ports(self, id):
+        return commands.getoutput("docker port " + id)
+
     def get_usage_rate(self):
         rates = dict()
         for container_id in self.container_ids:
             first = self.f_usage[container_id]
             last = self.l_usage[container_id]
 
+            container_ports = self.get_container_ports(container_id)
             mem_total = self.calc_mem_total(last)
             mem_usage = self.calc_mem_usage(last)
             mem_free = self.calc_mem_total(last) - self.calc_mem_usage(last)
             cpu_rate = self.calc_cpu_usage(first, last)
             if cpu_rate:
                 self.f_usage[container_id] = self.l_usage[container_id]
-                rates[container_id[0:12]] = {'cpu': cpu_rate, 'memory': mem_usage, 'mem_total': mem_total, 'mem_free': mem_free}
+                rates[container_id[0:12]] = {'ports': container_ports, 'cpu': cpu_rate, 'memory': mem_usage, 'mem_total': mem_total, 'mem_free': mem_free}
 
         return rates
 

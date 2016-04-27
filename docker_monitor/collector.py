@@ -7,8 +7,7 @@ import argparse
 import socket
 import json
 import sys
-import datetime
-import commands
+o
 
 from docker_monitor.common import logs
 from docker_monitor.common import config
@@ -31,8 +30,9 @@ def display_status(meters):
              else return some message
     """
     for key, value in meters.iteritems():
-        print("{id} CPU => {cpu:.2f}% Memory => {mem:0.2f} MB / {mem_total} MB = {mem_free:0.2f} MB".format(
+        print("{id} Ports => {ports} CPU => {cpu:.2f}% Memory => {mem:0.2f} MB / {mem_total} MB = {mem_free:0.2f} MB".format(
             id=key,
+            ports=value['ports'],
             cpu=value['cpu'],
             mem=value['memory'],
             mem_total=value['mem_total'],
