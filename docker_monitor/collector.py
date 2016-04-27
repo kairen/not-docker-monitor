@@ -7,6 +7,8 @@ import argparse
 import socket
 import json
 import sys
+import datetime
+import commands
 
 from docker_monitor.common import logs
 from docker_monitor.common import config
@@ -42,7 +44,14 @@ def publish_status(meters):
     """
     Publish docker meters status callback
     """
-    status = {socket.gethostname(): meters}
+    status = {
+        socket.gethostname(): {
+            "ip_addr": commands.getoutput("ip route get 8.8.8.8 | awk '{print $NF; exit}'"),
+            "update_time": str(datetime.datetime.now()),
+            "container_status":
+                meters
+        }
+    }
     publish.RabbitPublish(
         host=CONF.rabbit_host(),
         port=CONF.rabbit_port(),
