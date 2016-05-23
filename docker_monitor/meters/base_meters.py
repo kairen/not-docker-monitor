@@ -11,7 +11,7 @@ from abc import ABCMeta, abstractmethod
 LOG = logging.getLogger("collect.docker.meters")
 
 
-class Meters(Thread, metaclass=ABCMeta):
+class Meters(Thread):
     """
     Base meters class, this class is define all meters
     """

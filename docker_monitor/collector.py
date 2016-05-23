@@ -51,7 +51,7 @@ def publish_status(meters):
 
     publish.RabbitPublish(
         body=json.dumps(status),
-        **CONF.rabbit_profile(),
+        **CONF.rabbit_profile()
     ).run()
 
 
