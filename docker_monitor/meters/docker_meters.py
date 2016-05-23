@@ -83,4 +83,4 @@ class DockerMeters(base_meters.Meters):
                 if rates:
                     callback_rates.update(rates)
                     self.live_container(callback_rates)
-                    self.callback(callback_rates, "cgroup")
+                    self.callback(callback_rates)

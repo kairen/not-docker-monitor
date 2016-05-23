@@ -42,23 +42,24 @@ def display_status(meters, t):
             ))
 
 
-def publish_status(meters, t):
+def rabbit_publish(body):
+    publish.RabbitPublish(body=json.dumps(body), **CONF.rabbit_profile()).run()
+
+
+def publish_container_status(meters):
     """
     Publish docker meters status callback
     """
-    key = "container_status" if t == 'cgroup' else "system_status"
-    status = {
-        info.hostname(): {
-            "ip_addr": info.ip_addr(),
-            "update_time": info.update_time(),
-            'key': meters
-        }
-    }
+    status = info.status("container_status", meters)
+    rabbit_publish(status)
 
-    publish.RabbitPublish(
-        body=json.dumps(status),
-        **CONF.rabbit_profile()
-    ).run()
+
+def publish_system_status(meters):
+    """
+    Publish system meters status callback
+    """
+    status = info.status("system_status", meters)
+    rabbit_publish(status)
 
 
 @align_terminal_top(description="Docker meter status")
@@ -114,9 +115,9 @@ def main():
                 **CONF.rabbit_profile()
             ).start()
         else:
-            callback = display_status if role == 'None' else publish_status
+            callback = display_status if role == 'None' else publish_container_status
             DockerMeters(func=callback, window_time=CONF.window_time()).run()
-            SysMeters(func=callback, window_time=CONF.window_time()).run()
+            SysMeters(func=publish_system_status, window_time=CONF.window_time()).run()
 
     except Exception as e:
         LOG.error("%s" % (e.__str__()))

@@ -22,6 +22,16 @@ def update_time():
     return str(datetime.datetime.now())
 
 
+def status(title, meters):
+    return {
+        hostname(): {
+            "ip_addr": ip_addr(),
+            "update_time": update_time(),
+            title: meters
+        }
+    }
+
+
 def cpu_cores():
     return int(commands.getoutput("egrep -c '(vmx|svm)' /proc/cpuinfo"))
 
@@ -77,7 +87,7 @@ def cgroup_cpu_usage(cid):
 
 def cgroup_mem_usage(cid):
     return int(commands.getoutput(
-        "cat/sys/fs/cgroup/memory/docker/{}/memory.usage_in_bytes".format(cid)
+        "cat /sys/fs/cgroup/memory/docker/{}/memory.usage_in_bytes".format(cid)
     )) / float(1000000)
 
 

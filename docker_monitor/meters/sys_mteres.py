@@ -55,4 +55,4 @@ class SysMeters(base_meters.Meters):
             rates = self.get_usage_rate()
             if rates:
                 callback_rates.update(rates)
-                self.callback(callback_rates, "system")
+                self.callback(callback_rates)
