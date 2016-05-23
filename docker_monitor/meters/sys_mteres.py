@@ -26,19 +26,18 @@ class SysMeters(base_meters.Meters):
         if total_diff and idle_diff:
             total = last['cpu_total'] - first['cpu_total']
             idle = last['cpu_idle'] - first['cpu_idle']
-            return float(100) - (idle / total * 100)
+            return float(100) - (float(idle) / float(total) * 100)
         return None
 
     def get_usage_rate(self):
-
         cpu_rate = self.calc_cpu_usage(self.first_usage, self.last_usage)
         if cpu_rate:
             rates = {
-                "cpu_used": cpu_rate,
-                "cpu_MHz": info.cpu_speed(),
-                "mem_used": info.mem_used(),
-                "mem_total": info.mem_total(),
-                "mem_free": info.mem_free(),
+                "cpu_used": round(cpu_rate, 3),
+                "cpu_MHz": round(info.cpu_speed(), 3),
+                "mem_used": round(info.mem_used(), 3),
+                "mem_total": round(info.mem_total(), 3),
+                "mem_free": round(info.mem_free(), 3),
             }
             self.first_usage = self.last_usage
 

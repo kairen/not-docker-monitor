@@ -58,3 +58,30 @@ def mem_free():
 
 def mem_used():
     return mem_total() - mem_free()
+
+
+def container_ids():
+    ids = commands.getoutput("docker ps -q --no-trunc")
+    return ids.split("\n") if id != '' else []
+
+
+def container_ports(cid):
+    return commands.getoutput("docker port {}".format(cid))
+
+
+def cgroup_cpu_usage(cid):
+    return int(commands.getoutput(
+        "/sys/fs/cgroup/cpuacct/docker/{}/cpuacct.usage".format(cid)
+    ))
+
+
+def cgroup_mem_usage(cid):
+    return int(commands.getoutput(
+        "/sys/fs/cgroup/memory/docker/{}/memory.usage_in_bytes".format(cid)
+    )) / float(1000000)
+
+
+def cgroup_limit_mem(cid):
+    return int(commands.getoutput(
+        "/sys/fs/cgroup/memory/docker/{}/memory.limit_in_bytes".format(cid)
+    )) / float(1024) / float(1024)

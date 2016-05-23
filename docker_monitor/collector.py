@@ -10,7 +10,7 @@ from docker_monitor.common import info
 from docker_monitor.common import config
 from docker_monitor.common import logs
 from docker_monitor.common.decorator import align_terminal_top
-from docker_monitor.meters.sys_mteres import SysMeters
+from docker_monitor.meters.docker_meters import DockerMeters
 from docker_monitor.rabbitmq import publish, consumer
 
 LOG = logging.getLogger("docker-monitor")
@@ -45,7 +45,7 @@ def publish_status(meters):
         info.hostname(): {
             "ip_addr": info.ip_addr(),
             "update_time": info.update_time(),
-            "system_status": meters
+            "container_status": meters
         }
     }
 
@@ -108,7 +108,7 @@ def main():
                 **CONF.rabbit_profile()
             ).start()
         else:
-            SysMeters(
+            DockerMeters(
                 func=display_status if role == 'None' else publish_status,
                 window_time=CONF.window_time()
             ).run()
