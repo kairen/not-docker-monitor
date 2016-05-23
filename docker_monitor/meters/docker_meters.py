@@ -54,10 +54,10 @@ class DockerMeters(base_meters.Meters):
                 self.first_usage[cid] = self.last_usage[cid]
                 rates[cid[0:12]] = {
                     'ports': info.container_ports(cid),
-                    'cpu_used': cpu_rate,
-                    'mem_used': last['mem_used'],
-                    'mem_total': last['mem_total'],
-                    'mem_free': last['mem_total'] - last['mem_used']
+                    'cpu_used': round(cpu_rate, 3),
+                    'mem_used': round(last['mem_used'], 3),
+                    'mem_total': round(last['mem_total'], 3),
+                    'mem_free': round(last['mem_total'] - last['mem_used'], 3)
                 }
         return rates
 
@@ -83,4 +83,4 @@ class DockerMeters(base_meters.Meters):
                 if rates:
                     callback_rates.update(rates)
                     self.live_container(callback_rates)
-                    self.callback(callback_rates)
+                    self.callback(callback_rates, "cgroup")

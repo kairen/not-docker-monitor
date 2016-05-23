@@ -71,17 +71,17 @@ def container_ports(cid):
 
 def cgroup_cpu_usage(cid):
     return int(commands.getoutput(
-        "/sys/fs/cgroup/cpuacct/docker/{}/cpuacct.usage".format(cid)
+        "cat /sys/fs/cgroup/cpuacct/docker/{}/cpuacct.usage".format(cid)
     ))
 
 
 def cgroup_mem_usage(cid):
     return int(commands.getoutput(
-        "/sys/fs/cgroup/memory/docker/{}/memory.usage_in_bytes".format(cid)
+        "cat/sys/fs/cgroup/memory/docker/{}/memory.usage_in_bytes".format(cid)
     )) / float(1000000)
 
 
 def cgroup_limit_mem(cid):
     return int(commands.getoutput(
-        "/sys/fs/cgroup/memory/docker/{}/memory.limit_in_bytes".format(cid)
+        "cat /sys/fs/cgroup/memory/docker/{}/memory.limit_in_bytes".format(cid)
     )) / float(1024) / float(1024)

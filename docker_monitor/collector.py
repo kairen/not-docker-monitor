@@ -11,41 +11,47 @@ from docker_monitor.common import config
 from docker_monitor.common import logs
 from docker_monitor.common.decorator import align_terminal_top
 from docker_monitor.meters.docker_meters import DockerMeters
+from docker_monitor.meters.sys_mteres import SysMeters
 from docker_monitor.rabbitmq import publish, consumer
 
 LOG = logging.getLogger("docker-monitor")
 STATUS = dict()
 CONF = None
 
+DISPLAY_CPU = "CPU => {cpu:.2f}% "
+DISPLAY_MEM = "Memory => {mem:0.2f} MB / {mem_total} MB = {mem_free:0.2f} MB"
+
+DISPLAY_MESSAGE = "{id} Ports => {ports} " + DISPLAY_CPU + DISPLAY_MEM
+
 
 @align_terminal_top(description="Docker meter status")
-def display_status(meters):
+def display_status(meters, t):
     """
     Display docker meters status callback
+    :param t:
     :param meters: this is docker meter objects
     :return: if meter not None return status,
              else return some message
     """
-    for key, value in meters.iteritems():
-        print("{id} Ports => {ports} CPU => {cpu:.2f}% Memory => {mem:0.2f} MB / {mem_total} MB = {mem_free:0.2f} MB".format(
-            id=key,
-            ports=value['ports'],
-            cpu=value['cpu'],
-            mem=value['memory'],
-            mem_total=value['mem_total'],
-            mem_free=value['mem_free']
-        ))
+    if t == 'cgroup':
+        for key, value in meters.iteritems():
+            print(DISPLAY_MESSAGE.format(
+                id=key, ports=value['ports'],
+                cpu=value['cpu_used'], mem=value['mem_used'],
+                mem_total=value['mem_total'], mem_free=value['mem_free']
+            ))
 
 
-def publish_status(meters):
+def publish_status(meters, t):
     """
     Publish docker meters status callback
     """
+    key = "container_status" if t == 'cgroup' else "system_status"
     status = {
         info.hostname(): {
             "ip_addr": info.ip_addr(),
             "update_time": info.update_time(),
-            "container_status": meters
+            'key': meters
         }
     }
 
@@ -108,10 +114,9 @@ def main():
                 **CONF.rabbit_profile()
             ).start()
         else:
-            DockerMeters(
-                func=display_status if role == 'None' else publish_status,
-                window_time=CONF.window_time()
-            ).run()
+            callback = display_status if role == 'None' else publish_status
+            DockerMeters(func=callback, window_time=CONF.window_time()).run()
+            SysMeters(func=callback, window_time=CONF.window_time()).run()
 
     except Exception as e:
         LOG.error("%s" % (e.__str__()))
