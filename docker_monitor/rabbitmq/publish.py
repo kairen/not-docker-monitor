@@ -16,19 +16,19 @@ class RabbitPublish(Thread):
     RabbitMQ Publish class
     """
 
-    def __init__(self, host, port, **kwargs):
+    def __init__(self, **kwargs):
         super(RabbitPublish, self).__init__()
 
         self.kwargs = kwargs
         self.queue = self.kwargs['queue']
 
-        credentials = pika.PlainCredentials(kwargs['user'], kwargs['passwd'])
+        credentials = pika.PlainCredentials(kwargs['username'], kwargs['password'])
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(
-                host=host,
-                port=port,
+                host=kwargs['host'],
+                port=int(kwargs['port']),
                 credentials=credentials,
-                socket_timeout=kwargs['timeout']
+                socket_timeout=float(kwargs['timeout']),
             )
         )
 

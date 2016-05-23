@@ -8,7 +8,7 @@ import time
 import multiprocessing
 from threading import Thread
 
-LOG = logging.getLogger("collect.meters")
+LOG = logging.getLogger("collect.docker.meters")
 
 SYS_CORE = multiprocessing.cpu_count()
 SYS_CPU_CMD = "awk '/cpu / {for(i=2;i<=NF;i++) t+=$i; print t; t=0}' /proc/stat"

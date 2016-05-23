@@ -2,19 +2,15 @@
 # Copyright 2016 NUTC i.m.a.c.
 # All Rights Reserved
 
-import logging
 import argparse
-import socket
 import json
-import sys
-import datetime
-import commands
+import logging
 
-from docker_monitor.common import logs
+from docker_monitor.common import info
 from docker_monitor.common import config
+from docker_monitor.common import logs
 from docker_monitor.common.decorator import align_terminal_top
-
-from docker_monitor.meters import Meters
+from docker_monitor.meters.sys_mteres import SysMeters
 from docker_monitor.rabbitmq import publish, consumer
 
 LOG = logging.getLogger("docker-monitor")
@@ -46,21 +42,16 @@ def publish_status(meters):
     Publish docker meters status callback
     """
     status = {
-        socket.gethostname(): {
-            "ip_addr": commands.getoutput("ip route get 8.8.8.8 | awk '{print $NF; exit}'"),
-            "update_time": str(datetime.datetime.now()),
-            "container_status":
-                meters
+        info.hostname(): {
+            "ip_addr": info.ip_addr(),
+            "update_time": info.update_time(),
+            "system_status": meters
         }
     }
+
     publish.RabbitPublish(
-        host=CONF.rabbit_host(),
-        port=CONF.rabbit_port(),
-        queue=CONF.rabbit_queue(),
         body=json.dumps(status),
-        user=CONF.rabbit_user(),
-        passwd=CONF.rabbit_passwd(),
-        timeout=CONF.rabbit_timeout(),
+        **CONF.rabbit_profile(),
     ).run()
 
 
@@ -97,10 +88,6 @@ def main():
 
     parser = get_parser()
 
-    if len(sys.argv) < 2:
-        parser.print_help()
-        sys.exit()
-
     args = parser.parse_args()
     CONF = config.Configuration(args.config_file)
     if CONF.debug():
@@ -114,19 +101,14 @@ def main():
         sh.setLevel(logging.DEBUG)
 
     try:
-        role = CONF.rabbit_role()
+        role = CONF.rabbit_profile()["role"]
         if role == 'consumer':
             consumer.RabbitConsumer(
                 func=receive_callback,
-                host=CONF.rabbit_host(),
-                port=CONF.rabbit_port(),
-                queue=CONF.rabbit_queue(),
-                user=CONF.rabbit_user(),
-                passwd=CONF.rabbit_passwd(),
-                timeout=CONF.rabbit_timeout(),
+                **CONF.rabbit_profile()
             ).start()
         else:
-            Meters(
+            SysMeters(
                 func=display_status if role == 'None' else publish_status,
                 window_time=CONF.window_time()
             ).run()
