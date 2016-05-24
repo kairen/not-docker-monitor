@@ -27,8 +27,10 @@ $ sudo useradd --home-dir "/var/lib/${SERVICE}" \
 $ sudo mkdir -p /var/run/${SERVICE}
 $ sudo mkdir -p /etc/${SERVICE}
 $ sudo cp -r etc/docker-monitor/docker-monitor.conf /etc/${SERVICE}/
+$ sudo touch /var/lib/${SERVICE}/data.json
 $ sudo chown -R ${SERVICE}:${SERVICE} /var/run/${SERVICE}
 $ sudo chown -R ${SERVICE}:${SERVICE} /etc/${SERVICE}
+$ sudo chown -R ${SERVICE}:${SERVICE} /var/lib/${SERVICE}
 ```
 
 編輯```/etc/docker-monitor/docker-monitor.conf```檔案，並修改一下：
@@ -37,6 +39,7 @@ $ sudo chown -R ${SERVICE}:${SERVICE} /etc/${SERVICE}
 debug = False
 window_time = 0.5
 meters = all
+save_path = /var/lib/docker-monitor/data.json
 
 [rabbit_messaging]
 username = docker

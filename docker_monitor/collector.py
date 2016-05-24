@@ -68,8 +68,11 @@ def receive_callback(ch, method, properties, body):
             STATUS.update(json.loads(body))
 
         STATUS[k].update(v)
-
-    print(json.dumps(STATUS, indent=4, sort_keys=True))
+    data = json.dumps(STATUS, indent=4, sort_keys=True)
+    with open(CONF.save_path(), "w") as f:
+        f.write(data)
+        f.close()
+    print(data)
 
 
 def get_parser():
