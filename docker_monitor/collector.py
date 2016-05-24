@@ -28,7 +28,7 @@ DISPLAY_MESSAGE = "{id} Ports => {ports} " + DISPLAY_CPU + DISPLAY_MEM
 def display_status(meters, t):
     """
     Display docker meters status callback
-    :param t:
+    :param t: meter type
     :param meters: this is docker meter objects
     :return: if meter not None return status,
              else return some message
@@ -42,12 +42,19 @@ def display_status(meters, t):
             ))
 
 
-def publish_status(meters, t):
+def publish_system(meters, t):
     """
-    Publish meters status callback
+    Publish system meters status callback
     """
-    title = "container_status" if t == "cgroup" else "system_status"
-    status = info.status(title, meters)
+    status = info.status(t, meters)
+    publish.RabbitPublish(body=json.dumps(status), **CONF.rabbit_profile()).run()
+
+
+def publish_container(meters, t):
+    """
+    Publish container meters status callback
+    """
+    status = info.status(t, meters)
     publish.RabbitPublish(body=json.dumps(status), **CONF.rabbit_profile()).run()
 
 
@@ -109,9 +116,17 @@ def main():
                 **CONF.rabbit_profile()
             ).start()
         else:
-            callback = display_status if role == 'None' else publish_status
-            DockerMeters(func=callback, window_time=CONF.window_time()).start()
-            SysMeters(func=callback, window_time=CONF.window_time()).start()
-
+            docker_cbf = display_status if role == 'None' else publish_container
+            sys_cbf = display_status if role == 'None' else publish_system
+            dt = DockerMeters(func=docker_cbf, window_time=CONF.window_time())
+            dt.start()
+            st = SysMeters(func=sys_cbf, window_time=CONF.window_time())
+            st.start()
+            threads = [dt, st]
+            while True:
+                for t in threads:
+                    t.join(10)
+                    if not t.isAlive():
+                        break
     except Exception as e:
         LOG.error("%s" % (e.__str__()))

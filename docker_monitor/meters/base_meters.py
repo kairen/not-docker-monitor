@@ -6,9 +6,9 @@ import logging
 import time
 
 from threading import Thread
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
-LOG = logging.getLogger("collect.docker.meters")
+LOG = logging.getLogger("collect.meters")
 
 
 class Meters(Thread):
@@ -21,8 +21,8 @@ class Meters(Thread):
 
     def __init__(self, func, **kwargs):
         super(Meters, self).__init__()
-
         self.kwargs = kwargs
+        self.setDaemon(True)
 
         window_time = self.kwargs['window_time']
         self.window_time = window_time if window_time else 0.5
