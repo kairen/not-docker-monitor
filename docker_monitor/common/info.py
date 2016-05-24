@@ -50,7 +50,7 @@ def cpu_idle():
 
 def cpu_speed():
     return float(commands.getoutput(
-        "awk '/cpu MHz/ {print $4}' /proc/cpuinfo"
+        "awk '/cpu MHz/ {print $4}' /proc/cpuinfo | uniq"
     )) / float(1024)
 
 

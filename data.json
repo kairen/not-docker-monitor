@@ -2,21 +2,21 @@
     "docker-m-test-2": {
         "container_status": {
             "af707202d3a7": {
-                "cpu_used": 0.015, 
-                "mem_free": 1999.081, 
+                "cpu_used": 0.01, 
+                "mem_free": 1999.208, 
                 "mem_total": 2001.883, 
-                "mem_used": 2.802, 
+                "mem_used": 2.675, 
                 "ports": "80/tcp -> 0.0.0.0:80"
             }
         }, 
         "ip_addr": "172.16.1.92", 
         "system_status": {
             "cpu_MHz": 3.32, 
-            "cpu_used": 15.094, 
-            "mem_free": 699.027, 
+            "cpu_used": 5.941, 
+            "mem_free": 539.73, 
             "mem_total": 2001.883, 
-            "mem_used": 1302.75
+            "mem_used": 1462.152
         }, 
-        "update_time": "2016-05-24 03:52:45.561225"
+        "update_time": "2016-05-24 06:43:12.474402"
     }
 }

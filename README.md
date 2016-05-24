@@ -36,20 +36,20 @@ $ sudo chown -R ${SERVICE}:${SERVICE} /var/lib/${SERVICE}
 編輯```/etc/docker-monitor/docker-monitor.conf```檔案，並修改一下：
 ```
 [default]
-debug = False
-window_time = 0.5
+debug = True
+window_time = 1
 meters = all
 save_path = /var/lib/docker-monitor/data.json
 
 [rabbit_messaging]
 username = docker
 password = docker
-host = 10.26.1.192
+host = localhost
 port = 5672
 queue = stat
 
 # This value has 'consumer', 'producer', 'None'
-role = consumer
+role = None
 
 timeout = 60
 ```
