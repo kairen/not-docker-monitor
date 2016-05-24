@@ -28,6 +28,9 @@ class Configuration:
     def window_time(self):
         return self.parser.getfloat("default", "window_time")
 
+    def save_path(self):
+        return self.parser.get("default", "save_path")
+
     def rabbit_profile(self):
         profiles = {
             key: self.parser.get(
