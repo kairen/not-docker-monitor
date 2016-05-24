@@ -8,7 +8,7 @@ import logging
 from docker_monitor.common import info
 from docker_monitor.meters import base_meters
 
-LOG = logging.getLogger("collect.sys.meters")
+LOG = logging.getLogger("collect.docker.meters")
 
 
 class DockerMeters(base_meters.Meters):
@@ -83,4 +83,4 @@ class DockerMeters(base_meters.Meters):
                 if rates:
                     callback_rates.update(rates)
                     self.live_container(callback_rates)
-                    self.callback(callback_rates)
+                    self.callback(callback_rates, "container_status")

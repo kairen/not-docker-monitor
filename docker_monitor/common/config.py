@@ -19,7 +19,6 @@ class Configuration:
 
     def __init__(self, conf_path):
         self.conf_path = conf_path if conf_path is not None else DEFAULT_CONF_PATH
-        print(self.conf_path)
         self.parser = SafeConfigParser()
         self.parser.read(self.conf_path)
 
